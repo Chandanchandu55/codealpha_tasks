@@ -33,8 +33,9 @@ The system consists of several key components:
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
-   cd data-redundancy-removal-system
+   git clone https://github.com/Chandanchandu55/codealpha_tasks.git
+   cd codealpha_tasks
+   cd "Data Redundancy Removal System Task"
    ```
 
 2. **Install dependencies**:
@@ -54,6 +55,382 @@ The system consists of several key components:
    ```
 
 The API will be available at `http://localhost:8000`
+
+## 🚀 Quick Start: Validate, Run, and Test
+
+### Step 1: Start the Server
+
+```bash
+# Navigate to the project directory
+cd "Data Redundancy Removal System Task"
+
+# Start the server
+python main.py
+```
+
+**Server Status:** Running on `http://localhost:8000`
+
+### Step 2: Access Interactive Documentation
+
+Open your browser and go to:
+```
+http://localhost:8000/docs
+```
+
+This provides a beautiful Swagger UI to test all endpoints interactively.
+
+### Step 3: Validate Data Before Adding
+
+**Method 1: Using curl (Command Line)**
+```bash
+# Validate a new entry
+curl -X POST "http://localhost:8000/validate" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "This is unique content", "data_type": "test", "source": "manual"}'
+```
+
+**Expected Response:**
+```json
+{
+  "is_valid": true,
+  "can_add": true,
+  "message": "No redundancy detected. Safe to add this entry.",
+  "redundancy_check": {
+    "is_duplicate": false,
+    "is_false_positive": false,
+    "similarity_score": 0.0,
+    "matched_entries": [],
+    "recommendation": "No redundancy detected. Safe to add this entry."
+  }
+}
+```
+
+**Method 2: Using Python**
+```python
+import requests
+
+# Validate content
+response = requests.post('http://localhost:8000/validate', json={
+    'content': 'Your unique content here',
+    'data_type': 'document',
+    'source': 'user_input'
+})
+
+result = response.json()
+print(f"Can add: {result['can_add']}")
+print(f"Message: {result['message']}")
+```
+
+### Step 4: Add Validated Data
+
+**Method 1: Using curl**
+```bash
+# Add the validated entry
+curl -X POST "http://localhost:8000/add" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "This is unique content", "data_type": "test", "source": "manual"}'
+```
+
+**Method 2: Using Python**
+```python
+import requests
+
+# Add entry
+response = requests.post('http://localhost:8000/add', json={
+    'content': 'Your unique content here',
+    'data_type': 'document',
+    'source': 'user_input'
+})
+
+if response.status_code == 200:
+    entry = response.json()
+    print(f"Successfully added entry ID: {entry['id']}")
+else:
+    print(f"Error: {response.json()}")
+```
+
+### Step 5: Test Redundancy Detection
+
+**Test Exact Duplicate Detection:**
+```bash
+# Try to add the same content again
+curl -X POST "http://localhost:8000/add" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "This is unique content", "data_type": "test", "source": "manual"}'
+```
+
+**Expected Response (400 Bad Request):**
+```json
+{
+  "detail": "Exact duplicate found. Reject this entry."
+}
+```
+
+**Test Similar Content Detection:**
+```bash
+# Try to add similar content (with small variation)
+curl -X POST "http://localhost:8000/add" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "This is unique content!", "data_type": "test", "source": "manual"}'
+```
+
+**Expected Response (400 Bad Request):**
+```json
+{
+  "detail": "Similar content found. High probability of redundancy. Reject this entry."
+}
+```
+
+### Step 6: Force Add Override (When Needed)
+
+```bash
+# Force add a duplicate entry
+curl -X POST "http://localhost:8000/add?force_add=true" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "This is unique content", "data_type": "test", "source": "manual"}'
+```
+
+**Expected Response (200 OK):**
+```json
+{
+  "content": "This is unique content",
+  "data_type": "test",
+  "source": "manual",
+  "id": 2,
+  "content_hash": "...",
+  "similarity_score": 1.0,
+  "is_duplicate": true,
+  "is_false_positive": false,
+  "created_at": "...",
+  "updated_at": "..."
+}
+```
+
+### Step 7: Search and Manage Data
+
+**Search Entries:**
+```bash
+# Search for specific content
+curl "http://localhost:8000/search?query=unique"
+```
+
+**Get Statistics:**
+```bash
+# View database statistics
+curl "http://localhost:8000/statistics"
+```
+
+**Expected Statistics Response:**
+```json
+{
+  "total_entries": 2,
+  "unique_entries": 1,
+  "duplicates_found": 1,
+  "false_positives": 0,
+  "data_type_distribution": {
+    "test": 2
+  }
+}
+```
+
+### Step 8: Run Comprehensive Tests
+
+**Method 1: Automated Test Suite**
+```bash
+# Run the comprehensive API test
+python test_api.py
+```
+
+**Expected Output:**
+```
+🧪 Testing Data Redundancy Removal System API
+============================================================
+✅ PASSED: Root Endpoint
+✅ PASSED: Validate Unique Entry
+✅ PASSED: Add Unique Entry
+✅ PASSED: Add Exact Duplicate (should fail)
+✅ PASSED: Add Similar Entry (should fail)
+✅ PASSED: Get All Entries
+✅ PASSED: Search Entries
+✅ PASSED: Get Statistics
+✅ PASSED: Force Add Duplicate
+🏁 TEST SUMMARY
+Passed: 9/9
+Success Rate: 100%
+🎉 ALL TESTS PASSED! The system is working correctly.
+```
+
+**Method 2: Example Usage Script**
+```bash
+# Run the example usage demonstration
+python example_usage.py
+```
+
+## 🔧 Advanced Testing Scenarios
+
+### Scenario 1: Complete Workflow Test
+
+```python
+import requests
+import json
+
+def complete_workflow_test():
+    base_url = "http://localhost:8000"
+    
+    # Step 1: Validate new content
+    print("1️⃣ Validating new content...")
+    response = requests.post(f"{base_url}/validate", json={
+        'content': 'Complete workflow test entry',
+        'data_type': 'workflow_test',
+        'source': 'automated_test'
+    })
+    print(f"Validation: {response.json()['message']}")
+    
+    # Step 2: Add the content
+    print("\n2️⃣ Adding content...")
+    response = requests.post(f"{base_url}/add", json={
+        'content': 'Complete workflow test entry',
+        'data_type': 'workflow_test',
+        'source': 'automated_test'
+    })
+    entry_id = response.json()['id']
+    print(f"Added entry ID: {entry_id}")
+    
+    # Step 3: Try to add duplicate (should fail)
+    print("\n3️⃣ Testing duplicate detection...")
+    response = requests.post(f"{base_url}/add", json={
+        'content': 'Complete workflow test entry',
+        'data_type': 'workflow_test',
+        'source': 'automated_test'
+    })
+    print(f"Duplicate detection: {response.json()['detail']}")
+    
+    # Step 4: Search for the entry
+    print("\n4️⃣ Searching for entry...")
+    response = requests.get(f"{base_url}/search?query=workflow")
+    print(f"Found {len(response.json())} matching entries")
+    
+    # Step 5: Get final statistics
+    print("\n5️⃣ Getting statistics...")
+    response = requests.get(f"{base_url}/statistics")
+    stats = response.json()
+    print(f"Total entries: {stats['total_entries']}")
+    print(f"Unique entries: {stats['unique_entries']}")
+    print(f"Duplicates found: {stats['duplicates_found']}")
+    
+    print("\n✅ Complete workflow test finished!")
+
+# Run the test
+complete_workflow_test()
+```
+
+### Scenario 2: Performance Testing
+
+```python
+import requests
+import time
+import random
+
+def performance_test():
+    base_url = "http://localhost:8000"
+    
+    # Test validation performance
+    print("🚀 Performance Testing...")
+    
+    start_time = time.time()
+    
+    # Validate 100 entries
+    for i in range(100):
+        content = f"Performance test entry {i}"
+        response = requests.post(f"{base_url}/validate", json={
+            'content': content,
+            'data_type': 'performance_test',
+            'source': 'automated'
+        })
+        
+        if response.json()['can_add']:
+            # Add the entry
+            requests.post(f"{base_url}/add", json={
+                'content': content,
+                'data_type': 'performance_test',
+                'source': 'automated'
+            })
+    
+    end_time = time.time()
+    
+    # Get final statistics
+    response = requests.get(f"{base_url}/statistics")
+    stats = response.json()
+    
+    print(f"⏱️  Processed 100 entries in {end_time - start_time:.2f} seconds")
+    print(f"📊 Final stats: {stats['total_entries']} total, {stats['duplicates_found']} duplicates")
+
+# Run performance test
+performance_test()
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues and Solutions
+
+**Issue: Server won't start**
+```bash
+# Check if port 8000 is already in use
+netstat -ano | findstr :8000
+
+# Kill the process using the port
+taskkill /PID <PID> /F
+```
+
+**Issue: Database errors**
+```bash
+# Delete the database file and restart
+rm data_redundancy.db
+python main.py
+```
+
+**Issue: Import errors**
+```bash
+# Reinstall dependencies
+pip install -r requirements.txt --force-reinstall
+```
+
+**Issue: Validation always returns no redundancy**
+- Make sure you're adding entries to the database first
+- Validation only checks against existing entries
+- Use the `/add` endpoint to populate the database
+
+## 📊 Monitoring and Maintenance
+
+### Check System Health
+```bash
+# Get current statistics
+curl "http://localhost:8000/statistics"
+
+# Get all entries (with pagination)
+curl "http://localhost:8000/entries?limit=10"
+
+# Get only unique entries
+curl "http://localhost:8000/entries?unique_only=true"
+```
+
+### Database Maintenance
+```bash
+# View database size
+ls -lh data_redundancy.db
+
+# Backup database
+cp data_redundancy.db data_redundancy_backup_$(date +%Y%m%d).db
+```
+
+## 🎯 Best Practices
+
+1. **Always validate before adding** - Use the `/validate` endpoint first
+2. **Handle duplicate responses gracefully** - Check for 400 status codes
+3. **Use force add sparingly** - Only when you have a specific reason
+4. **Monitor statistics regularly** - Keep track of database health
+5. **Test with sample data** - Use the provided test scripts
+6. **Search before adding** - Use `/search` to check for similar content
 
 ## Configuration
 
